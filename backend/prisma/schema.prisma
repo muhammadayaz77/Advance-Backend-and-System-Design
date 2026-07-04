@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+ datasource db {
+  provider = "postgresql"
+ }
+
+ enum AuthProvider {
+  email
+  google
+  apple
+ }
+
+ enum AccountType {
+  user
+  admin
+  client
+  freelancer
+ }
+
+ enum UserRole {
+  education
+  blue_collar
+  healthcare
+  student
+  performer
+  other
+ }
+
+ model User {
+  id            String       @id @default(uuid())
+  fullName      String
+  email         String       @unique
+  passwordHash  String?      // null for Google/Apple OAuth users
+  googleId      String?      @unique // Google OAuth sub
+  appleId       String?      @unique // Apple Sign-In sub
+  authProvider  AuthProvider @default(email)
+  phone         String?
+  countryCode   String?
+  accountType   AccountType  @default(user)
+  role          UserRole     @default(other)
+  onboardingCompleted Boolean @default(false)
+  emailVerified Boolean      @default(false)
+  status        String       @default("active")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([googleId])
+  @@index([appleId])
+
+  profile            Profile?
+  emailVerifications EmailVerification[]
+  passwordResets     PasswordReset[]
+  // Optional back‑reference to the products owned by a user
+  products           Product[]
+ }
+
+ model Profile {
+  userId    String   @id
+  avatarUrl String?
+  bio       String?
+  location  String?
+  age       Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ }
+
+ model EmailVerification {
+  id        String    @id @default(uuid())
+  userId    String
+  code      String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+ }
+
+ model PasswordReset {
+  id        String    @id @default(uuid())
+  userId    String
+  code      String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+ }
+
+ model Product {
+  id        String    @id @default(uuid())
+  title     String 
+  userId    String
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+ }

@@ -1,0 +1,86 @@
+# ----------------------------
+# Dependencies
+# ----------------------------
+node_modules/
+.pnp/
+.pnp.js
+
+# ----------------------------
+# Build output
+# ----------------------------
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# ----------------------------
+# Runtime / logs
+# ----------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ----------------------------
+# Environment files (secrets)
+# ----------------------------
+.env
+.env.*
+!.env.example
+
+# ----------------------------
+# Cache / tooling
+# ----------------------------
+.cache/
+.nyc_output/
+coverage/
+tmp/
+temp/
+.eslintcache
+.swc/
+.turbo/
+.parcel-cache/
+.vite/
+webpack-cache/
+
+# ----------------------------
+# Nest / framework specific
+# ----------------------------
+# (Nest itself mainly outputs to dist/, already ignored)
+
+# ----------------------------
+# Testing
+# ----------------------------
+junit.xml
+
+# ----------------------------
+# IDEs / editors
+# ----------------------------
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.iml
+
+# ----------------------------
+# OS files
+# ----------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ----------------------------
+# Optional: Docker (if you keep local overrides)
+# ----------------------------
+docker-compose.override.yml
+
+# ----------------------------
+# Optional: Prisma (uncomment if using Prisma and don't want local DB files)
+# ----------------------------
+# prisma/dev.db
+# prisma/dev.db-journal
+
+/generated/prisma
