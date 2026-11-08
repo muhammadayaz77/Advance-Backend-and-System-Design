@@ -328,7 +328,7 @@ export async function resetPassword(
   if (!user) {
     throw new BadRequestError("Invalid or expired password reset code");
   }
-
+  
   const resetRecord = await prisma.passwordReset.findFirst({
     where: {
       userId: user.id,
