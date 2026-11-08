@@ -1,0 +1,1 @@
+{"version":3,"file":"require-auth.js","sourceRoot":"","sources":["../../src/middleware/require-auth.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,iBAAiB,EAAE,MAAM,kBAAkB,CAAC;AAErD,MAAM,UAAU,WAAW,CACzB,GAAY,EACZ,IAAc,EACd,IAAkB;IAElB,IAAI,CAAC,GAAG,CAAC,IAAI,EAAE,CAAC;QACd,MAAM,IAAI,iBAAiB,CAAC,yBAAyB,CAAC,CAAC;IACzD,CAAC;IACD,IAAI,EAAE,CAAC;AACT,CAAC"}

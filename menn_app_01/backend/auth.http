@@ -1,0 +1,96 @@
+### WorkSphere Auth API Requests
+@baseUrl = http://localhost:3001/api/v1
+@email = testuser@example.com
+@password = Password123!
+
+### 1. Health Check
+GET {{baseUrl}}/
+Content-Type: application/json
+
+### 2. Register a New User
+# Look at server console output for the 6-character OTP!
+# @name register
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Test User",
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "phone": "1234567890",
+  "countryCode": "+1"
+}
+
+### 3. Verify Email
+# Replace "CODE_HERE" with the 6-character code printed in your server terminal console
+POST {{baseUrl}}/auth/verify-email
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "code": "CODE_HERE"
+}
+
+### 4. Resend Verification Code
+POST {{baseUrl}}/auth/resend-verification
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}
+
+### 5. Login
+# On success, this returns accessToken and sets the httpOnly 'refresh_token' cookie
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Save access token from login response
+@accessToken = {{login.response.body.data.accessToken}}
+
+### 6. Refresh Tokens
+# Reads httpOnly 'refresh_token' cookie and returns a fresh accessToken
+POST {{baseUrl}}/auth/refresh
+
+### 7. Complete Onboarding (Protected - Requires JWT)
+PATCH {{baseUrl}}/auth/onboarding
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "accountType": "freelancer",
+  "role": "individual"
+}
+
+### 8. Forgot Password
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}
+
+### 9. Reset Password
+# Replace "TOKEN_HERE" with the 6-character code printed in server terminal console
+POST {{baseUrl}}/auth/reset-password
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "token": "TOKEN_HERE",
+  "newPassword": "NewPassword123!"
+}
+
+### 10. Logout (Protected - Clears Cookie)
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{accessToken}}
+
+### 11. Delete Account (Protected - Cascading Deletion)
+DELETE {{baseUrl}}/auth/account
+Authorization: Bearer {{accessToken}}
+

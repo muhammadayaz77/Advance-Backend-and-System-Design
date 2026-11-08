@@ -450,3 +450,4 @@ export function logout(res: Response): { message: string } {
   clearRefreshCookie(res);
   return { message: "Logged out successfully" };
 }
+

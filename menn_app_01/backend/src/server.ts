@@ -1,36 +1,33 @@
-import "dotenv/config"
+import app from "./app.js";
+import { env } from "./config/env.js";
+import { prisma } from "./lib/prisma.js";
 
-import app from './app.js'
+async function startServer(): Promise<void> {
+  try {
+    await prisma.$connect();
+    console.log("Database connected successfully");
 
-import {prisma} from './lib/prisma.js'
+    const server = app.listen(env.PORT, () => {
+      console.log(`Server running at http://localhost:${env.PORT}`);
+      console.log(`API base URL: http://localhost:${env.PORT}/api/v1`);
+    });
 
-const PORT = Number(process.env.PORT) || 5000;
-
-
-async function startServer(){
-    try {
-        await prisma.$connect();
-        
-        const server = app.listen(PORT,()=>{
-
-        console.log(`Server running at http://localhost:${PORT}`);
-        console.log("Database connected successfully");
-        });
-
-        const shutdown = async() => {
-            console.log("Shutting down server...");
-            server.close(async() => {
-                await prisma.$disconnect();
-                process.exit(0);
-            })
-            process.on("SIGINT", shutdown);
-            process.on("SIGTERM", shutdown);
-        }
-    } catch (error) {
-         console.error("Failed to start the server:", error);
+    const shutdown = async (signal: string) => {
+      console.log(`Received ${signal}, shutting down gracefully...`);
+      server.close(async () => {
         await prisma.$disconnect();
-        process.exit(1);
-    }
+        console.log("Database disconnected. Server closed.");
+        process.exit(0);
+      });
+    };
+
+    process.on("SIGINT", () => void shutdown("SIGINT"));
+    process.on("SIGTERM", () => void shutdown("SIGTERM"));
+  } catch (error) {
+    console.error("Failed to start the server:", error);
+    await prisma.$disconnect();
+    process.exit(1);
+  }
 }
 
 void startServer();

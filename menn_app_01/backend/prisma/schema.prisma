@@ -31,30 +31,42 @@ enum UserRole {
 }
 
 model User {
-  id                  String              @id @default(uuid())
+  id                  String       @id @default(uuid())
   fullName            String
-  email               String              @unique
-  passwordHash        String?
-  googleId            String?             @unique
-  appleId             String?             @unique
-  authProvider        AuthProvider        @default(email)
+  email               String       @unique
+  passwordHash        String? // null for Google/Apple OAuth users
+  googleId            String?      @unique // Google OAuth sub
+  appleId             String?      @unique // Apple Sign-In sub
+  authProvider        AuthProvider @default(email)
   phone               String?
   countryCode         String?
-  accountType         AccountType         @default(user)
-  role                UserRole            @default(other)
-  onboardingCompleted Boolean             @default(false)
-  emailVerified       Boolean             @default(false)
-  status              String              @default("active")
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-
-  @@index([googleId])
-  @@index([appleId])
+  accountType         AccountType  @default(user)
+  role                UserRole     @default(other)
+  onboardingCompleted Boolean      @default(false)
+  emailVerified       Boolean      @default(false)
+  status              String       @default("active")
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
   profile            Profile?
   emailVerifications EmailVerification[]
   passwordResets     PasswordReset[]
+  // Optional back‑reference to the products owned by a user
   products           Product[]
+
+  // Relations for Blog apple
+
+  articles     Article[]
+  comments     Comment[]
+  articleLikes ArticleLike[]
+  bookmarks    Bookmark[]
+
+  // Follow Relationships
+  following Follow[] @relation("UserFollowing")
+  followers Follow[] @relation("UserFollowers")
+
+  @@index([googleId])
+  @@index([appleId])
 }
 
 model Profile {
@@ -96,10 +108,121 @@ model PasswordReset {
 }
 
 model Product {
-  id        String   @id @default(uuid())
-  title     String
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(uuid())
+  title  String
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+enum ArticleStatus {
+  draft
+  published
+  archived
+}
+
+model Article {
+  id          String        @id @default(uuid())
+  title       String
+  slug        String        @unique
+  content     String        @db.Text
+  excerpt     String?
+  coverImage  String?
+  status      ArticleStatus @default(draft)
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  tags      Tag[]
+  comments  Comment[]
+  likes     ArticleLike[]
+  bookmarks Bookmark[]
+
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([status, publishedAt])
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  articles Article[]
+}
+
+model Tag {
+  id   String @id @default(uuid())
+  name String @unique
+  slug String @unique
+
+  articles Article[]
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  articleId String
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  parentId String?
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentReplies")
+
+  @@index([articleId])
+  @@index([userId])
+  @@index([parentId])
+}
+
+model ArticleLike {
+  id        String   @id @default(uuid())
+  userId    String
+  articleId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@index([articleId])
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  userId    String
+  articleId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@index([userId])
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followingId])
 }

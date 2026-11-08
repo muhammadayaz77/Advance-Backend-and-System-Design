@@ -14,7 +14,7 @@ export const envSchema = z.object({
   GOOGLE_CALLBACK_URL: z.string().optional().default("http://localhost:3001/api/v1/auth/google/callback"),
   MAIL_HOST: z.string().min(1).default("smtp.gmail.com"),
   MAIL_PORT: z.coerce.number().default(587),
-  MAIL_SECURE: z.coerce.boolean().default(false),
+  MAIL_SECURE: z.preprocess((val) => val === "true" || val === true, z.boolean()).default(false),
   MAIL_USER: z.string().min(1).default("dev@worksphere.local"),
   MAIL_PASS: z.string().min(1).default("devpassword"),
   MAIL_FROM_NAME: z.string().default("WorkSphere"),
