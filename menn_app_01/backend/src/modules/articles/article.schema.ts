@@ -30,6 +30,14 @@
  })
 
 
+ export const publishArticleSchema = z.object({
+    status: z.enum(["published","draft"]),
+ })
+
+// All fields from createArticleSchema become optional 
+export const updateArticleSchema = createArticleSchema.partial();
  // Export inferred Typescript type so Servie and Repository can use it
 
  export type CreateArticleInput = z.infer<typeof createArticleSchema>
+ export type PublishArticleInput = z.infer<typeof publishArticleSchema>
+ export type UpdateArticleInput = z.infer<typeof updateArticleSchema>
