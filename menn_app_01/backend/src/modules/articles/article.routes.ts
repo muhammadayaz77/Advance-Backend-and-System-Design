@@ -6,6 +6,11 @@ import { createArticleSchema, publishArticleSchema, updateArticleSchema } from '
 
 
 const router = Router()
+
+router.get(
+    "/",
+    articleController.list
+)
 router.get(
     "/:slug",
     articleController.getBySlug
@@ -27,6 +32,24 @@ router.patch(
     requireAuth,
     validate(updateArticleSchema),
     articleController.update
+)
+
+router.delete(
+    "/:id",
+    requireAuth,
+    articleController.remove
+)
+
+router.post(
+    '/:id/like',
+    requireAuth,
+    articleController.toggleLike
+)
+
+router.post(
+    "/:id/bookmark",
+    requireAuth,
+    articleController.toggleBookmark
 )
 
 export default router

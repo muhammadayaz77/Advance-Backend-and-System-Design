@@ -1,7 +1,7 @@
 import { BadRequestError, ForbiddenError, NotFoundError } from "../../lib/errors.js";
 import { notFoundHandler } from "../../middleware/error-handler.js";
 import { articleRepository } from "./article.respository.js";
-import { CreateArticleInput, UpdateArticleInput } from "./article.schema.js";
+import { CreateArticleInput, ListArticlesQuery, UpdateArticleInput } from "./article.schema.js";
 import crypto from "crypto"
 
 function generateSlug(title: string): string {
@@ -104,5 +104,86 @@ export const articleService = {
             newSlug = generateSlug(input.title);
         }
         return articleRepository.update(articleId,newSlug,input)
+    },
+
+
+    async deleteArticle(articleId:string,userId:string,userRole:string){
+
+        const article = await articleRepository.findById(articleId)
+
+        if(!article){
+            throw new NotFoundError("Article not found")
+        }
+        // Ownership check
+
+        if(article.authorId !== userId && userRole !== "admin"){
+            throw new ForbiddenError("You are not authorized to delete this article")
+        }
+
+        // delete from database
+
+        await articleRepository.delete(articleId)
+
+        return { 
+            message : "Article permanently deleted"
+        }
+    },
+
+    async listArticle(query:ListArticlesQuery){
+        const {articles,totalCount} = await articleRepository.findMany(query);
+        const {page,limit} = query;
+
+        return {
+            articles,
+            pagination: {
+                currentPage:page,
+                limit,
+                totalCount,
+                totalPages: Math.ceil(totalCount / limit),
+                hasNextPage: page * limit < totalCount,
+                hasPrevPage: page > 1,
+            }
+        }
+    },
+
+    async toggleLike(articleId:string,userId:string){
+        const article = await articleRepository.findById(articleId);
+
+        if(!article){
+            throw new NotFoundError("Article not found");
+        }
+
+        // check if user already liked this article
+        const existingLike = await articleRepository.findLike(userId,articleId);
+
+        if (existingLike){
+            // Unlike
+            await articleRepository.removeLike(userId,articleId);
+
+            const likeCount = await articleRepository.countLike(articleId);
+            return { liked: false, likeCount}
+        }else{
+            await articleRepository.addLike(userId,articleId);
+            const likeCount = await articleRepository.countLike(articleId);
+            return { liked: true, likeCount};
+        }
+    },
+
+    async toggleBookmark(articleId:string,userId:string){
+        const article = await articleRepository.findById(articleId);
+
+        if(!article){
+            throw new NotFoundError("Article not found")
+        }
+
+        const existingBookmark = await articleRepository.findBookmark(userId,articleId);
+
+        if(existingBookmark){
+            await articleRepository.removeBookmark(userId,articleId);
+            return { bookmarked : false}
+        }else{
+            await articleRepository.addBookmark(userId,articleId)
+            return { bookmarked : true}
+        }
     }
 }

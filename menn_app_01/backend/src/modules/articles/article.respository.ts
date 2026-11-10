@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma.js";
-import { CreateArticleInput, UpdateArticleInput } from "./article.schema.js";
+import { CreateArticleInput, ListArticlesQuery, UpdateArticleInput } from "./article.schema.js";
 
 
 
@@ -142,6 +142,140 @@ export const articleRepository = {
                 tags:true
             }
         })
+    }, 
+
+    async delete(id:string){
+        await prisma.article.delete({
+            where : {
+                id
+            }
+        })
+    },
+
+    async findMany(query: ListArticlesQuery){
+        const { page, limit, search, tag, category, authorId, sortBy} = query;
+
+        const skip = (page - 1) * limit;
+
+        // 1. Build Dynamic WHERE filter (only show published posts)
+        const where: any = {
+            status: "published"
+        };
+
+        if(authorId){
+            where.authorId = authorId;
+        }
+        if(category){
+            where.category = {slug:category};
+        }
+        if(tag){
+            where.tags = {some: { slug: tag.toLowerCase()}
+        }
+        }
+
+        if(search){
+            where.OR = [
+                { title: { contains: search, mode: "insensitive"}},
+                { content: { contains: search, mode: "insensitive"}}
+            ];
+        }
+        // 2. Build Sorting Criteria 
+        const orderBy: any = {};
+        if(sortBy === "popular"){
+            orderBy.likes = { _count: "desc"}
+        }else{
+            orderBy.publishedAt = "desc";
+        }
+        // 3. Execute data uery and total count in parallel
+
+        const [articles,totalCount] = await Promise.all([
+            prisma.article.findMany({
+                where,
+                skip,
+                take:limit,
+                orderBy,
+                include:{
+                    author: {
+                        select: {
+                            id:true,
+                            fullName: true,
+                            profile:{
+                                select: { avatarUrl:true}
+                            }
+                        },
+                    },
+                category:true,
+                tags: true,
+                _count: {
+                    select: {
+                        likes:true,
+                        comments:true
+                    }
+                }
+                }
+            }),
+            prisma.article.count({where})
+        ])
+        return {articles,totalCount}
+
+    },
+
+    async findLike(userId:string,articleId:string){
+        return prisma.articleLike.findUnique({
+            where: {
+                userId_articleId: {userId, articleId},
+            }
+        })
+    },
+
+    async addLike(userId:string,articleId:string){
+        return prisma.articleLike.create({
+            data:{ userId, articleId }
+        })
+    },
+
+    async removeLike(userId:string,articleId:string){
+        return prisma.articleLike.delete({
+            where : {
+               userId_articleId:{userId,articleId}
+            }
+        })    
+    },
+
+    async countLike(articleId:string){
+        return prisma.articleLike.count({
+            where: { articleId }
+        })
+    },
+
+
+    // Bookmarks
+
+    async findBookmark(userId:string,articleId:string){
+        return prisma.bookmark.findUnique({
+            where: {
+                userId_articleId: { userId, articleId },
+            }
+        })
+    },
+
+    async addBookmark(userId:string,articleId:string){
+        return prisma.bookmark.create({
+            data: {
+                userId,articleId
+            }
+        })
+    },
+
+    async removeBookmark(userId:string,articleId:string){
+        return prisma.bookmark.delete({
+            where : {
+                userId_articleId:{userId,articleId}
+            }
+        })
     }
 
+
+
 }
+

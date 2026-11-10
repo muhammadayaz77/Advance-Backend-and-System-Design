@@ -34,6 +34,17 @@
     status: z.enum(["published","draft"]),
  })
 
+ export const listArticlesQuerySchema = z.object({
+
+   page : z.coerce.number().int().positive().default(1),
+   limit: z.coerce.number().int().positive().max(50).default(10),
+   search: z.string().optional(),
+   tag : z.string().optional(),
+   category: z.string().optional(),
+   authorId : z.string().optional(),
+   sortBy: z.enum(["latest","popular"]).default("latest"),
+ })
+
 // All fields from createArticleSchema become optional 
 export const updateArticleSchema = createArticleSchema.partial();
  // Export inferred Typescript type so Servie and Repository can use it
@@ -41,3 +52,5 @@ export const updateArticleSchema = createArticleSchema.partial();
  export type CreateArticleInput = z.infer<typeof createArticleSchema>
  export type PublishArticleInput = z.infer<typeof publishArticleSchema>
  export type UpdateArticleInput = z.infer<typeof updateArticleSchema>
+
+export type ListArticlesQuery = z.infer<typeof listArticlesQuerySchema>

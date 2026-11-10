@@ -201,7 +201,7 @@ model ArticleLike {
   @@index([articleId])
 }
 
-model Bookmark {
+  model Bookmark {
   id        String   @id @default(uuid())
   userId    String
   articleId String
