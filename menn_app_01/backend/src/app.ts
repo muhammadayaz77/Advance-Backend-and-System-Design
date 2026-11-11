@@ -17,6 +17,7 @@ import { registerGoogleStrategy } from "./auth/strategies/google.strategy.js";
 
 import authRouter from "./auth/auth.router.js";
 import articleRouter from "./modules/articles/article.routes.js"
+import commentRouter from "./modules/comments/comment.routes.js"
 
 // 1. DNS fix (prevents IPv6 SMTP issues)
 dns.setDefaultResultOrder("ipv4first");
@@ -88,6 +89,9 @@ app.use("/api/v1/auth", authRouter);
 
 // ─── Articlres ───────────────────────────────────────────────────────────
 app.use("/api/v1/articles",articleRouter)
+
+// ─── Comments ───────────────────────────────────────────────────────────
+app.use("/api/v1/comments",commentRouter)
 
 // ─── Error Handling ───────────────────────────────────────────────────────────
 app.use(notFoundHandler);
